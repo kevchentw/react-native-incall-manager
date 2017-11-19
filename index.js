@@ -174,6 +174,7 @@ class InCallManager {
     async getPowerState() {
       try {
           let result = await _InCallManager.getPowerState();
+          console.log(result);
           return result;
       } catch (err) {
           return null;
