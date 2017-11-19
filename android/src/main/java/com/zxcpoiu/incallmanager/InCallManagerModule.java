@@ -834,6 +834,52 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
     }
 
     @ReactMethod
+    public void getPowerState(Promise promise) {
+        String isDeviceIdleMode = "unknow"; // --- API 23
+        String isIgnoringBatteryOptimizations = "unknow"; // --- API 23
+        String isPowerSaveMode = "unknow"; // --- API 21
+        String isInteractive = "unknow"; // --- API 20 ( before since API 7 is: isScreenOn())
+        String screenState = "unknow"; // --- API 20
+
+        if (android.os.Build.VERSION.SDK_INT >= 23) {
+            isDeviceIdleMode = String.format("%s", mPowerManager.isDeviceIdleMode());
+            isIgnoringBatteryOptimizations = String.format("%s", mPowerManager.isIgnoringBatteryOptimizations(mPackageName));
+        }
+        if (android.os.Build.VERSION.SDK_INT >= 21) {
+            isPowerSaveMode = String.format("%s", mPowerManager.isPowerSaveMode());
+        }
+        if (android.os.Build.VERSION.SDK_INT >= 20) {
+            isInteractive = String.format("%s", mPowerManager.isInteractive());
+            Display display = mWindowManager.getDefaultDisplay();
+            switch (display.getState()) {
+                case Display.STATE_OFF:
+                    screenState = "STATE_OFF";
+                    break;
+                case Display.STATE_ON:
+                    screenState = "STATE_ON";
+                    break;
+                case Display.STATE_DOZE:
+                    screenState = "STATE_DOZE";
+                    break;
+                case Display.STATE_DOZE_SUSPEND:
+                    screenState = "STATE_DOZE_SUSPEND";
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            isInteractive = String.format("%s", mPowerManager.isScreenOn());
+        }
+        WritableNativeMap param = new WritableNativeMap();
+        param.putString("screenState", screenState);
+        param.putString("isInteractive", screenState);
+        param.putString("isPowerSaveMode", screenState);
+        param.putString("isDeviceIdleMode", screenState);
+        param.putString("isIgnoringBatteryOptimizations", screenState);
+        promise.resolve(param);
+    }
+
+    @ReactMethod
     public void turnScreenOn() {
         if (isProximityWakeLockSupported()) {
             Log.d(TAG, "turnScreenOn(): use proximity lock.");
@@ -930,8 +976,8 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
         }
     }
 
-    /** 
-     * This is part of start() process. 
+    /**
+     * This is part of start() process.
      * ringbackUriType must not empty. empty means do not play.
      */
     public void startRingback(final String ringbackUriType) {
@@ -960,7 +1006,7 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
                 ringbackUri = getRingbackUri(ringbackUriType);
                 if (ringbackUri == null) {
                     Log.d(TAG, "startRingback(): no available media");
-                    return;    
+                    return;
                 }
             }
 
@@ -978,7 +1024,7 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
             mRingback.startPlay(data);
         } catch(Exception e) {
             Log.d(TAG, "startRingback() failed");
-        }   
+        }
     }
 
     @ReactMethod
@@ -990,11 +1036,11 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
             }
         } catch(Exception e) {
             Log.d(TAG, "stopRingback() failed");
-        }   
+        }
     }
 
-    /** 
-     * This is part of start() process. 
+    /**
+     * This is part of start() process.
      * busytoneUriType must not empty. empty means do not play.
      * return false to indicate play tone failed and should be stop() immediately
      * otherwise, it will stop() after a tone completed.
@@ -1025,7 +1071,7 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
                 busytoneUri = getBusytoneUri(busytoneUriType);
                 if (busytoneUri == null) {
                     Log.d(TAG, "startBusytone(): no available media");
-                    return false;    
+                    return false;
                 }
             }
 
@@ -1046,7 +1092,7 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
             Log.d(TAG, "startBusytone() failed");
             Log.d(TAG, e.getMessage());
             return false;
-        }   
+        }
     }
 
     public void stopBusytone() {
@@ -1057,7 +1103,7 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
             }
         } catch(Exception e) {
             Log.d(TAG, "stopBusytone() failed");
-        }   
+        }
     }
 
     @ReactMethod
@@ -1084,7 +1130,7 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
             Uri ringtoneUri = getRingtoneUri(ringtoneUriType);
             if (ringtoneUri == null) {
                 Log.d(TAG, "startRingtone(): no available media");
-                return;    
+                return;
             }
 
             acquirePartialWakeLock();
@@ -1121,7 +1167,7 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
         } catch(Exception e) {
             releasePartialWakeLock();
             Log.d(TAG, "startRingtone() failed");
-        }   
+        }
     }
 
     @ReactMethod
@@ -1138,7 +1184,7 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
             }
         } catch(Exception e) {
             Log.d(TAG, "stopRingtone() failed");
-        }   
+        }
         releasePartialWakeLock();
     }
 
@@ -1150,7 +1196,7 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
             public boolean onError(MediaPlayer mp, int what, int extra) {
                 Log.d(TAG, String.format("MediaPlayer %s onError(). what: %d, extra: %d", name, what, extra));
                 //return True if the method handled the error
-                //return False, or not having an OnErrorListener at all, will cause the OnCompletionListener to be called. Get news & tips 
+                //return False, or not having an OnErrorListener at all, will cause the OnCompletionListener to be called. Get news & tips
                 return true;
             }
         });
@@ -1176,7 +1222,7 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
                     audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
                 } else if (name.equals("mRingtone")) {
                     audioManager.setMode(AudioManager.MODE_RINGTONE);
-                } 
+                }
                 updateAudioRoute();
                 mp.start();
             }
@@ -1256,7 +1302,7 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
         String type;
         // --- _type would never be empty here. just in case.
         if (_type.equals("_DEFAULT_") ||  _type.isEmpty()) {
-            //type = fileSysWithExt; // --- 
+            //type = fileSysWithExt; // ---
             return getDefaultUserUri("defaultBusytoneUri");
         } else {
             type = _type;
@@ -1443,7 +1489,7 @@ public class InCallManagerModule extends ReactContextBaseJavaModule implements L
                             audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
                         } else if (caller.equals("mRingtone")) {
                             audioManager.setMode(AudioManager.MODE_RINGTONE);
-                        } 
+                        }
                         InCallManagerModule.this.updateAudioRoute();
 
                         tg.startTone(toneType);
