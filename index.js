@@ -171,17 +171,15 @@ class InCallManager {
             }
         }
     }
+    
     async getPowerState() {
-      return 'gg';
-    //   try {
-    //       // let result = await _InCallManager.getPowerState();
-    //       // console.log(result);
-    //
-    //       return 'result';
-    //   } catch (err) {
-    //       return null;
-    //   }
-    // }
+      try {
+          let result = await _InCallManager.getPowerState();
+          return result;
+      } catch (err) {
+          return null;
+      }
+    }
 }
 
 export default new InCallManager();
